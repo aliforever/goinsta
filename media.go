@@ -11,6 +11,7 @@ import (
 	neturl "net/url"
 	"os"
 	"path"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -24,7 +25,7 @@ type Item struct {
 	media    Media
 	Comments *Comments `json:"-"`
 
-	TakenAt          float64 `json:"taken_at"`
+	TakenAt          int64   `json:"taken_at"`
 	Pk               int64   `json:"pk"`
 	ID               string  `json:"id"`
 	CommentsDisabled bool    `json:"comments_disabled"`
@@ -91,6 +92,8 @@ type Item struct {
 	StorySliders             []interface{} `json:"story_sliders"`
 	StoryQuestions           []interface{} `json:"story_questions"`
 	StoryProductItems        []interface{} `json:"story_product_items"`
+	StoryCTA                 []interface{} `json:"story_cta"`
+	ReelMentions             []interface{} `json:"reel_mentions"`
 	SupportsReelReactions    bool          `json:"supports_reel_reactions"`
 	ShowOneTapFbShareTooltip bool          `json:"show_one_tap_fb_share_tooltip"`
 	HasSharedToFb            int64         `json:"has_shared_to_fb"`
@@ -187,31 +190,32 @@ func GetBest(obj interface{}) string {
 	return m.url
 }
 
+var rxpTags = regexp.MustCompile(`#\w+`)
+
 // Hashtags returns caption hashtags.
 //
 // Item media parent must be FeedMedia.
 //
 // See example: examples/media/hashtags.go
 func (item *Item) Hashtags() []Hashtag {
-	hsh := make([]Hashtag, 0)
-	capt := item.Caption.Text
-	for {
-		i := strings.IndexByte(capt, '#')
-		if i < 0 {
-			break
-		}
-		n := strings.IndexByte(capt[i:], ' ')
-		if n < 0 { // last hashtag
-			hsh = append(hsh, Hashtag{Name: capt[i+1:]})
-			break
-		}
+	tags := rxpTags.FindAllString(item.Caption.Text, -1)
 
-		// avoiding '#' character
-		hsh = append(hsh, Hashtag{Name: capt[i+1 : i+n]})
+	hsh := make([]Hashtag, len(tags))
 
-		// snipping caption
-		capt = capt[n+i:]
+	i := 0
+	for _, tag := range tags {
+		hsh[i].Name = tag[1:]
+		i++
 	}
+
+	for _, comment := range item.PreviewComments() {
+		tags := rxpTags.FindAllString(comment.Text, -1)
+
+		for _, tag := range tags {
+			hsh = append(hsh, Hashtag{Name: tag[1:]})
+		}
+	}
+
 	return hsh
 }
 
@@ -409,16 +413,37 @@ func (item *Item) TopLikers() []string {
 // If PreviewComments are string or []string only the Text field will be filled.
 func (item *Item) PreviewComments() []Comment {
 	switch s := item.Previewcomments.(type) {
-	case []Comment:
-		return s
-	case []string:
-		comments := make([]Comment, 0)
-		for i := range s {
-			comments = append(comments, Comment{
-				Text: s[i],
-			})
+	case []interface{}:
+		if len(s) == 0 {
+			return nil
 		}
-		return comments
+
+		switch s[0].(type) {
+		case interface{}:
+			comments := make([]Comment, 0)
+			for i := range s {
+				if buf, err := json.Marshal(s[i]); err != nil {
+					return nil
+				} else {
+					comment := &Comment{}
+
+					if err = json.Unmarshal(buf, comment); err != nil {
+						return nil
+					} else {
+						comments = append(comments, *comment)
+					}
+				}
+			}
+			return comments
+		case string:
+			comments := make([]Comment, 0)
+			for i := range s {
+				comments = append(comments, Comment{
+					Text: s[i].(string),
+				})
+			}
+			return comments
+		}
 	case string:
 		comments := []Comment{
 			{
