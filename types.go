@@ -342,3 +342,12 @@ type threadResp struct {
 	Conversation Conversation `json:"thread"`
 	Status       string       `json:"status"`
 }
+
+type ReelShare struct {
+	Text            string  `json:"text"`
+	Type            string  `json:"type"`
+	ReelOwnerId     int     `json:"reel_owner_id"`
+	MentionedUserId int64   `json:"mentioned_user_id"`
+	ReelType        *string `json:"reel_type"`
+	Media           *Item   `json:"media"`
+}

@@ -25,17 +25,9 @@ type InboxItem struct {
 	Like string `json:"like"`
 
 	// Media is image or video
-	Media struct {
-		ID                   string `json:"id"`
-		Images               Images `json:"image_versions2"`
-		OriginalWidth        int    `json:"original_width"`
-		OriginalHeight       int    `json:"original_height"`
-		MediaType            int    `json:"media_type"`
-		MediaID              int64  `json:"media_id"`
-		PlaybackDurationSecs int    `json:"playback_duration_secs"`
-		URLExpireAtSecs      int    `json:"url_expire_at_secs"`
-		OrganicTrackingToken string `json:"organic_tracking_token"`
-	}
+	Media *Item `json:"media"`
+
+	ReelShare *ReelShare `json:"reel_share"`
 }
 
 // Inbox is the direct message inbox.

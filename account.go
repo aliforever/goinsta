@@ -283,15 +283,15 @@ func (account *Account) Stories() *StoryMedia {
 // Tags returns media where account is tagged in
 //
 // For pagination use FeedMedia.Next()
-func (account *Account) Tags(minTimestamp []byte) (*FeedMedia, error) {
-	timestamp := b2s(minTimestamp)
+func (account *Account) Tags() (*FeedMedia, error) {
+	//timestamp := b2s(minTimestamp)
 	body, err := account.inst.sendRequest(
 		&reqOptions{
 			Endpoint: fmt.Sprintf(urlUserTags, account.ID),
 			Query: map[string]string{
-				"max_id":         "",
-				"rank_token":     account.inst.rankToken,
-				"min_timestamp":  timestamp,
+				"max_id":     "",
+				"rank_token": account.inst.rankToken,
+				//"min_timestamp":  timestamp,
 				"ranked_content": "true",
 			},
 		},
