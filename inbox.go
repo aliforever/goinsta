@@ -60,7 +60,7 @@ type inboxResp struct {
 	Status               string `json:"status"`
 }
 
-func newInbox(inst *Instagram) *Inbox {
+func NewInbox(inst *Instagram) *Inbox {
 	return &Inbox{inst: inst}
 }
 
