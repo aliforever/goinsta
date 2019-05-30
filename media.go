@@ -739,6 +739,7 @@ func (media *FeedMedia) Sync() error {
 	}
 
 	m := FeedMedia{}
+
 	err = json.Unmarshal(body, &m)
 	*media = m
 	media.endpoint = urlMediaInfo

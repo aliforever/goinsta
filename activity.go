@@ -88,6 +88,10 @@ func (act *FollowingActivity) Next() bool {
 	return false
 }
 
+type MineActivityMedia struct {
+	Id string `json:"id"`
+}
+
 // MineActivity is the recent activity menu.
 //
 // See example: examples/activity/recent.go
@@ -117,7 +121,7 @@ type MineActivity struct {
 		Requests    int `json:"requests"`
 	} `json:"counts"`
 	FriendRequestStories []interface{} `json:"friend_request_stories"`
-	Stories              []struct {
+	NewStories           []struct {
 		Type      int `json:"type"`
 		StoryType int `json:"story_type"`
 		Args      struct {
@@ -133,14 +137,47 @@ type MineActivity struct {
 				Following       bool `json:"following"`
 				OutgoingRequest bool `json:"outgoing_request"`
 			} `json:"inline_follow"`
-			Actions         []string `json:"actions"`
-			ProfileID       int64    `json:"profile_id"`
-			ProfileImage    string   `json:"profile_image"`
-			Timestamp       float64  `json:"timestamp"`
-			Tuuid           string   `json:"tuuid"`
-			Clicked         bool     `json:"clicked"`
-			ProfileName     string   `json:"profile_name"`
-			LatestReelMedia int64    `json:"latest_reel_media"`
+			Actions          []string             `json:"actions"`
+			ProfileID        int64                `json:"profile_id"`
+			ProfileImage     string               `json:"profile_image"`
+			Timestamp        float64              `json:"timestamp"`
+			Tuuid            string               `json:"tuuid"`
+			Clicked          bool                 `json:"clicked"`
+			ProfileName      string               `json:"profile_name"`
+			LatestReelMedia  int64                `json:"latest_reel_media"`
+			Media            *[]MineActivityMedia `json:"media"`
+			CommentNotifType string               `json:"comment_notif_type"`
+		} `json:"args"`
+		Counts struct {
+		} `json:"counts"`
+		Pk string `json:"pk"`
+	} `json:"new_stories"`
+	OldStories []struct {
+		Type      int `json:"type"`
+		StoryType int `json:"story_type"`
+		Args      struct {
+			Text  string `json:"text"`
+			Links []struct {
+				Start int    `json:"start"`
+				End   int    `json:"end"`
+				Type  string `json:"type"`
+				ID    string `json:"id"`
+			} `json:"links"`
+			InlineFollow struct {
+				UserInfo        User `json:"user_info"`
+				Following       bool `json:"following"`
+				OutgoingRequest bool `json:"outgoing_request"`
+			} `json:"inline_follow"`
+			Actions          []string             `json:"actions"`
+			ProfileID        int64                `json:"profile_id"`
+			ProfileImage     string               `json:"profile_image"`
+			Timestamp        float64              `json:"timestamp"`
+			Tuuid            string               `json:"tuuid"`
+			Clicked          bool                 `json:"clicked"`
+			ProfileName      string               `json:"profile_name"`
+			LatestReelMedia  int64                `json:"latest_reel_media"`
+			Media            *[]MineActivityMedia `json:"media"`
+			CommentNotifType string               `json:"comment_notif_type"`
 		} `json:"args"`
 		Counts struct {
 		} `json:"counts"`
@@ -179,7 +216,7 @@ func (act *MineActivity) Next() bool {
 		if err == nil {
 			*act = act2
 			act.inst = insta
-			if len(act.Stories) == 0 || act.NextID == 0 {
+			if (len(act.OldStories) == 0 && len(act.NewStories) == 0) || act.NextID == 0 {
 				act.err = ErrNoMore
 			}
 			return true
